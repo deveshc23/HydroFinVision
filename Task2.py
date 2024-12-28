@@ -2,69 +2,173 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from statsmodels.tsa.stattools import adfuller, kpss
 from scipy.stats import norm
 
-class StockAnalysis:
-    def __init__(self, ticker, start_date, end_date):
-        self.ticker = ticker
-        self.start_date = start_date
-        self.end_date = end_date
-        self.stock_data = yf.download(self.ticker, start=self.start_date, end=self.end_date)
-        self.stock_data['Daily Returns'] = self.stock_data['Close'].pct_change()
+class BlackScholesModel:
+    def __init__(self, S, K, T, r, sigma, option_type="call"):
+        self.S = S  # Current stock price (spot price on the day of the option)
+        self.K = K  # Option strike price
+        self.T = T  # Time to expiration in years
+        self.r = r  # Risk-free rate (annualized)
+        self.sigma = sigma  # Volatility (annualized)
+        self.option_type = option_type  # 'call' or 'put'
 
-    def plot_distributions(self):
-        fig, axes = plt.subplots(3, 1, figsize=(10, 15))
-        axes[0].hist(self.stock_data['Volume'], bins=50, density=True, alpha=0.6, color='g')
-        axes[0].set_title('Daily Volume Distribution')
-        axes[0].set_xlabel('Volume')
-        axes[0].set_ylabel('Density')
-        axes[1].hist(self.stock_data['Close'], bins=50, density=True, alpha=0.6, color='b')
-        axes[1].set_title('Daily Close Price Distribution')
-        axes[1].set_xlabel('Close Price')
-        axes[1].set_ylabel('Density')
-        axes[2].hist(self.stock_data['Daily Returns'].dropna(), bins=50, density=True, alpha=0.6, color='r')
-        axes[2].set_title('Daily Returns Distribution')
-        axes[2].set_xlabel('Daily Returns')
-        axes[2].set_ylabel('Density')
-        plt.tight_layout()
-        plt.show()
+    def calculate(self):
+        d1 = (np.log(self.S / self.K) + (self.r + 0.5 * self.sigma**2) * self.T) / (self.sigma * np.sqrt(self.T))
+        d2 = d1 - self.sigma * np.sqrt(self.T)
+        
+        if self.option_type == "call":
+            price = self.S * norm.cdf(d1) - self.K * np.exp(-self.r * self.T) * norm.cdf(d2)
+        elif self.option_type == "put":
+            price = self.K * np.exp(-self.r * self.T) * norm.cdf(-d2) - self.S * norm.cdf(-d1)
+        return price
 
-    def adf_test(self, series):
-        result = adfuller(series.dropna(), maxlag=12)
-        print("ADF Test for Series: ")
-        print("ADF Statistic:", result[0])
-        print("p-value:", result[1])
-        print("Critical Values:")
-        for key, value in result[4].items():
-            print(f'\t{key}: {value}')
+    def delta(self):
+        d1 = (np.log(self.S / self.K) + (self.r + 0.5 * self.sigma**2) * self.T) / (self.sigma * np.sqrt(self.T))
+        
+        if self.option_type == "call":
+            return norm.cdf(d1)
+        elif self.option_type == "put":
+            return norm.cdf(d1) - 1
 
-    def kpss_test(self, series):
-        result = kpss(series.dropna(), regression='c')
-        print("\nKPSS Test for Series: ")
-        print("KPSS Statistic:", result[0])
-        print("p-value:", result[1])
-        print("Critical Values:", result[3])
+    def gamma(self):
+        d1 = (np.log(self.S / self.K) + (self.r + 0.5 * self.sigma**2) * self.T) / (self.sigma * np.sqrt(self.T))
+        return norm.pdf(d1) / (self.S * self.sigma * np.sqrt(self.T))
 
-    def perform_tests(self):
-        print("\nStationarity Tests for Close Price")
-        self.adf_test(self.stock_data['Close'])
-        self.kpss_test(self.stock_data['Close'])
-        print("\nStationarity Tests for Daily Returns")
-        self.adf_test(self.stock_data['Daily Returns'])
-        self.kpss_test(self.stock_data['Daily Returns'])
+    def theta(self):
+        d1 = (np.log(self.S / self.K) + (self.r + 0.5 * self.sigma**2) * self.T) / (self.sigma * np.sqrt(self.T))
+        d2 = d1 - self.sigma * np.sqrt(self.T)
+        
+        if self.option_type == "call":
+            theta = (-self.S * norm.pdf(d1) * self.sigma) / (2 * np.sqrt(self.T)) - self.r * self.K * np.exp(-self.r * self.T) * norm.cdf(d2)
+        elif self.option_type == "put":
+            theta = (-self.S * norm.pdf(d1) * self.sigma) / (2 * np.sqrt(self.T)) + self.r * self.K * np.exp(-self.r * self.T) * norm.cdf(-d2)
+        
+        return theta
 
-    def analyze_other_stock(self, other_ticker):
-        stock_data_other = yf.download(other_ticker, start=self.start_date, end=self.end_date)
-        stock_data_other['Daily Returns'] = stock_data_other['Close'].pct_change()
-        print(f"\nStationarity Tests for {other_ticker} Close Price")
-        self.adf_test(stock_data_other['Close'])
-        self.kpss_test(stock_data_other['Close'])
-        print(f"\nStationarity Tests for {other_ticker} Daily Returns")
-        self.adf_test(stock_data_other['Daily Returns'])
-        self.kpss_test(stock_data_other['Daily Returns'])
+    def vega(self):
+        d1 = (np.log(self.S / self.K) + (self.r + 0.5 * self.sigma**2) * self.T) / (self.sigma * np.sqrt(self.T))
+        return self.S * norm.pdf(d1) * np.sqrt(self.T)
 
-stock_analysis = StockAnalysis('AAPL', '2023-01-01', '2024-01-01')
-stock_analysis.plot_distributions()
-stock_analysis.perform_tests()
-stock_analysis.analyze_other_stock('MSFT')
+    def rho(self):
+        d2 = (np.log(self.S / self.K) + (self.r + 0.5 * self.sigma**2) * self.T) / (self.sigma * np.sqrt(self.T)) - self.sigma * np.sqrt(self.T)
+        
+        if self.option_type == "call":
+            return self.K * np.exp(-self.r * self.T) * norm.cdf(d2)
+        elif self.option_type == "put":
+            return -self.K * np.exp(-self.r * self.T) * norm.cdf(-d2)
+
+ticker = "SPY"
+df = yf.download(ticker, period="6mo")
+
+spy = yf.Ticker(ticker)
+expiration_dates = spy.options
+print(f"Available Expiration Dates: {expiration_dates}")
+
+strike_price_to_check = 580
+
+# Prepare lists to store data
+expiration_dates_list = []
+call_theoretical_prices = []
+put_theoretical_prices = []
+call_actual_prices = []
+put_actual_prices = []
+
+call_deltas = []
+put_deltas = []
+call_gammas = []
+put_gammas = []
+call_thetas = []
+put_thetas = []
+call_vegas = []
+put_vegas = []
+call_rhos = []
+put_rhos = []
+
+r = 0.04 
+
+for expiration_date in expiration_dates:
+    option_chain = spy.option_chain(expiration_date)
+    
+    calls = option_chain.calls[option_chain.calls['strike'] == strike_price_to_check]
+    puts = option_chain.puts[option_chain.puts['strike'] == strike_price_to_check]
+    
+    if not calls.empty and not puts.empty:
+        spot_price = df.loc[df.index <= pd.to_datetime(expiration_date)].iloc[-1]['Close']  # Last close before expiration
+        
+        implied_volatility = calls.iloc[0]['impliedVolatility']
+        
+        T = (pd.to_datetime(expiration_date) - pd.to_datetime(df.index[-1])).days / 365  # Time to expiration
+        
+        call_bs = BlackScholesModel(spot_price, strike_price_to_check, T, r, implied_volatility, option_type="call")
+        put_bs = BlackScholesModel(spot_price, strike_price_to_check, T, r, implied_volatility, option_type="put")
+        
+        call_actual = calls.iloc[0]['lastPrice']  
+        put_actual = puts.iloc[0]['lastPrice']    
+        
+        call_deltas.append(call_bs.delta())
+        put_deltas.append(put_bs.delta())
+        call_gammas.append(call_bs.gamma())
+        put_gammas.append(put_bs.gamma())
+        call_thetas.append(call_bs.theta())
+        put_thetas.append(put_bs.theta())
+        call_vegas.append(call_bs.vega())
+        put_vegas.append(put_bs.vega())
+        call_rhos.append(call_bs.rho())
+        put_rhos.append(put_bs.rho())
+
+        expiration_dates_list.append(expiration_date)
+        call_theoretical_prices.append(call_bs.calculate())
+        put_theoretical_prices.append(put_bs.calculate())
+        call_actual_prices.append(call_actual)
+        put_actual_prices.append(put_actual)
+
+plt.figure(figsize=(10, 6))
+plt.plot(expiration_dates_list, call_theoretical_prices, label='Call Option Theoretical Price', color='blue', marker='o')
+plt.plot(expiration_dates_list, call_actual_prices, label='Call Option Actual Price', color='green', marker='x')
+plt.xlabel('Expiration Date')
+plt.ylabel('Price')
+plt.title(f"Theoretical vs Actual Call Option Prices for SPY at Strike {strike_price_to_check}")
+plt.xticks(rotation=45)
+plt.legend()
+plt.grid(True)
+plt.show()
+
+plt.figure(figsize=(10, 6))
+plt.plot(expiration_dates_list, put_theoretical_prices, label='Put Option Theoretical Price', color='red', marker='o')
+plt.plot(expiration_dates_list, put_actual_prices, label='Put Option Actual Price', color='orange', marker='x')
+plt.xlabel('Expiration Date')
+plt.ylabel('Price')
+plt.title(f"Theoretical vs Actual Put Option Prices for SPY at Strike {strike_price_to_check}")
+plt.xticks(rotation=45)
+plt.legend()
+plt.grid(True)
+plt.show()
+
+plt.figure(figsize=(12, 8))
+plt.plot(expiration_dates_list, call_deltas, label="Call Delta", color='blue')
+plt.plot(expiration_dates_list, call_gammas, label="Call Gamma", color='green')
+plt.plot(expiration_dates_list, call_thetas, label="Call Theta", color='red')
+plt.plot(expiration_dates_list, call_vegas, label="Call Vega", color='purple')
+plt.plot(expiration_dates_list, call_rhos, label="Call Rho", color='orange')
+plt.xlabel('Expiration Date')
+plt.ylabel('Greek Value')
+plt.title(f"Greeks for Call Option at Strike {strike_price_to_check}")
+plt.xticks(rotation=45)
+plt.legend()
+plt.grid(True)
+plt.show()
+
+plt.figure(figsize=(12, 8))
+plt.plot(expiration_dates_list, put_deltas, label="Put Delta", color='blue')
+plt.plot(expiration_dates_list, put_gammas, label="Put Gamma", color='green')
+plt.plot(expiration_dates_list, put_thetas, label="Put Theta", color='red')
+plt.plot(expiration_dates_list, put_vegas, label="Put Vega", color='purple')
+plt.plot(expiration_dates_list, put_rhos, label="Put Rho", color='orange')
+plt.xlabel('Expiration Date')
+plt.ylabel('Greek Value')
+plt.title(f"Greeks for Put Option at Strike {strike_price_to_check}")
+plt.xticks(rotation=45)
+plt.legend()
+plt.grid(True)
+plt.show()
