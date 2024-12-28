@@ -5,7 +5,12 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="f1d23e76-da48-43ba-a5f0-653f736a3fd8" name="Changes" comment="Add the files">
+      <change afterPath="$PROJECT_DIR$/Options_Pricing/Black_Scholes_Model.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Options_Pricing/options_pricing_test.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Options_Pricing/BinomialTreemodel.py" beforeDir="false" afterPath="$PROJECT_DIR$/Options_Pricing/BinomialTreemodel.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Options_Pricing/base.py" beforeDir="false" afterPath="$PROJECT_DIR$/Options_Pricing/base.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Options_Pricing/ticker.py" beforeDir="false" afterPath="$PROJECT_DIR$/Options_Pricing/ticker.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -45,14 +50,18 @@
   </component>
   <component name="PropertiesComponent">{
   &quot;keyToString&quot;: {
+    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;Python.Data_scrape.executor&quot;: &quot;Run&quot;,
     &quot;Python.Data_scrape_niftyurl.executor&quot;: &quot;Run&quot;,
     &quot;Python.Scraping_Nifty50.executor&quot;: &quot;Run&quot;,
     &quot;Python.Scraping_Nifty50_screener.executor&quot;: &quot;Run&quot;,
     &quot;Python.Task1_part2.executor&quot;: &quot;Run&quot;,
     &quot;Python.Task2.executor&quot;: &quot;Run&quot;,
+    &quot;Python.options_pricing_test.executor&quot;: &quot;Run&quot;,
+    &quot;Python.ticker.executor&quot;: &quot;Run&quot;,
     &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
     &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
     &quot;git-widget-placeholder&quot;: &quot;master&quot;,
     &quot;last_opened_file_path&quot;: &quot;C:/Users/choud/PycharmProjects/HydroMechanics_FinVision&quot;
   }
@@ -86,7 +95,31 @@
       <option name="project" value="LOCAL" />
       <updated>1734258726606</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="Add the files">
+      <option name="closed" value="true" />
+      <created>1735038769692</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1735038769692</updated>
+    </task>
+    <task id="LOCAL-00003" summary="Add the files">
+      <option name="closed" value="true" />
+      <created>1735038862386</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1735038862386</updated>
+    </task>
+    <task id="LOCAL-00004" summary="Add the files">
+      <option name="closed" value="true" />
+      <created>1735038883272</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1735038883272</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
